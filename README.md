@@ -18,7 +18,7 @@ Modeling the global dynamics of emerging infectious diseases (EIDs) like COVID-1
 ![Global_Network](./figs/MovieS1.gif)
 
 <div align="center">
-  <h3 align="center">Baseline scenarios with different R_0
+  <h3 align="center">Baseline scenarios with different R<sub>0</sub>
 </h3>
 </div>
 

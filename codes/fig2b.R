@@ -10,19 +10,17 @@ library(classInt)
 library(tibble)
 library(egg)
 ###########################
-df<-rbind(data.frame(read_csv("../data/df365n.csv")),
-          data.frame(read_csv("../data/df300_365.csv")))
+df<-rbind(data.frame(read_csv("./data/df365n.csv")),
+          data.frame(read_csv("./data/df300_365.csv")))
 
-iatatbr<-readRDS("../data/iatatb3157.rds")
+iatatbr<-readRDS("./data/iatatb3157.rds")
 
 s1<-data.frame(nameu=iatatbr$nameu,
                pop=iatatbr$UN_2020_E)
-odarrayr<-readRDS("../data/odarrayr3157.rds")
 ratio<-c(rep(c(31,30),3),31,31,rep(c(30,31),2))
 
-od1<-sweep(odarrayr,3,ratio,"*")
-n1<-apply(od1,1,FUN="sum")
-q30<-data.frame(read_csv("qtall.csv"))
+n1<-readRDS("./data/n41.rds")
+q30<-data.frame(read_csv("./data/qtall.csv"))
 q30<-q30[order(q30$index),]
 
 q<-data.frame(nameu=q30$nameu,osum=n1*2)
@@ -120,9 +118,9 @@ t
 tpfix <- set_panel_size(t,width  = unit(20, "cm"),
                         height = unit(20, "cm"))
 
-ggsave("../figs/fig4b.jpeg", tpfix,  width =25,
+ggsave("../figs/fig2b.jpeg", tpfix,  width =25,
        height = 25, units = "cm",dpi=1200,bg="transparent")
-ggsave("..figs/fig4b.svg", tpfix,  width =25, 
+ggsave("..figs/fig2b.svg", tpfix,  width =25, 
        height = 25, units = "cm",dpi=1200,bg="transparent")
 
 

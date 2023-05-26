@@ -9,7 +9,7 @@ library(lemon)
 library(mratios)
 library(egg)
 ###########################
-df<-data.frame(read_csv("../data/dfspwh_nn.csv"))
+df<-data.frame(read_csv("./data/dfspwh_nn.csv"))
 ###
 df<-subset(df,!is.na(ci) & r0==2.4)
 
@@ -24,7 +24,7 @@ df365<-data.frame(subset(df,days<=365)[c("n","ci","ctrl","itr","days")] %>%
                     filter(days == max(days)))
 min(df365$days)
 ###
-dfbase<-data.frame(read_csv("../data/basenew.csv"))
+dfbase<-data.frame(read_csv("./data/basenew.csv"))
 
 dfbase<-subset(dfbase,!is.na(ci))
 
@@ -103,9 +103,9 @@ t
 
 tpfix <- set_panel_size(t,width  = unit(20, "cm"),
                         height = unit(20, "cm"))
-ggsave("../figs/fig5a.jpeg", tpfix,  width =25,
+ggsave("../figs/fig3a.jpeg", tpfix,  width =25,
        height = 25, units = "cm",dpi=1200,bg="transparent")
-ggsave("../figs/fig5a.svg", tpfix,  width =25, 
+ggsave("../figs/fig3a.svg", tpfix,  width =25, 
     height = 25, units = "cm",dpi=1200,bg="transparent")
 
 

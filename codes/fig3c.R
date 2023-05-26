@@ -1,3 +1,4 @@
+rm(list=ls())
 library(readr)
 library(ggplot2)
 library(dplyr)
@@ -5,117 +6,124 @@ library(RColorBrewer)
 library(ggsci)
 library(ggthemes)
 library(lemon)
-library(reshape2)
-library(reshape)
-library(data.table)
+library(mratios)
 ###########################
-df<-data.frame(read_csv("../data/basenew.csv"))
-###########################
-#compare the first year cumulative infections
-df<-subset(df, !is.na(ci))
-names(df)[which(names(df)=="start")]<-"nameu"
-df<-subset(df, ssl=="low" & r0 == 2.4 & 
-             nameu=="Wuhan_NA_China")
+df<-subset(data.frame(read_csv(
+  "./data/controlsp100/df0.csv"))
+  ,r0==2.4)
 
-######################################################################################################################
-dfi<-data.frame(df[c("n","ic","ia","r0","itr","days")] %>%
-                  group_by(r0,itr,days) %>%
-                  summarise(n=sum(n),
-                            ic=sum(ic),
-                            ia=sum(ia)))
+df<- df[c("n","ci","days","ctrl","itr")] %>%
+  group_by(days,ctrl,itr) %>%
+  summarise(n = sum(n, na.rm = TRUE),
+            ci = sum(ci, na.rm = TRUE)) 
+unique(df$ctrl)
+df<-subset(df,ctrl!="schoolclose_100,workclose_90,otherclose_90,travelrestrict_90")
+dfbase<-data.frame(read_csv("dfbaseall2.csv"))
+dfbase<-subset(dfbase,ssl=="low"& r0==2.4& 
+                 start =="Wuhan_NA_China")
+###
 
-dfi$i<-(dfi$ic+dfi$ia)/dfi$n
-dfi<-dfi[-which(names(dfi) %in% c("n","ia","ic"))]
+df365<-data.frame(subset(df,days<=365)[c("n","ci","ctrl","itr","days")] %>%
+                    group_by(ctrl,itr) %>%
+                    filter(days == max(days)))
+min(df365$days)
+###
+dfbase<-data.frame(read_csv("./data/basenew.csv"))
 
-dfc<-data.frame(df[c("n","ci","r0","itr","days")] %>%
-                  group_by(r0,itr,days) %>%
-                  summarise(n=sum(n),
-                            ci=sum(ci)))
-dfc$ci<-dfc$ci/dfc$n
-dfc<-dfc[-which(names(dfc) %in% c("n","ia","ic"))]
-######################################################################################################################
+dfbase<-subset(dfbase,!is.na(ci))
 
+dfbase<-subset(dfbase,ssl=="low"& r0==2.4& 
+                 start =="Wuhan_NA_China")
 
-
-
-
-
-######################################################################################################################
-
-dfi2<-melt(dfi,id =c("r0","itr","days"))
-
-dfc2<-melt(dfc,id =c("r0","itr","days"))
-
-dfcm<-rbind(dfi2,dfc2)
-
-dfi3<- subset(dfcm) %>%
-  group_by(days,variable) %>%
-  summarise(mean.mpg = mean(value, na.rm = TRUE),
-            sd.mpg = sd(value, na.rm = TRUE),
-            n.mpg = n()) %>%
-  mutate(se.mpg = sd.mpg / sqrt(n.mpg),
-         lower.ci.mpg = mean.mpg- 1.96 * se.mpg,
-         upper.ci.mpg = mean.mpg + 1.96 * se.mpg)
+dfbase<- dfbase[c("n","ci","days","ctrl","itr")] %>%
+  group_by(days,ctrl,itr) %>%
+  summarise(n = sum(n, na.rm = TRUE),
+            ci = sum(ci, na.rm = TRUE)) 
 
 
+dfbase365<-data.frame(subset(dfbase,days<=365)[c("n","ci","ctrl","itr","days")] %>%
+                        group_by(ctrl,itr) %>%
+                        filter(days == max(days)))
+####
+dfci<-rbind(df365,dfbase365)
+dfci$ci<-dfci$ci/dfci$n
+####
+uctrl<-setdiff(unique(dfci$ctrl),c("baseline"))
 
-coef1<-max(subset(dfi3,variable=="ci")$mean.mpg)/
-  max(subset(dfi3,variable=="i")$mean.mpg,na.rm = TRUE)
+dfci <- subset(dfci, ci!=0)
+dfag<-c()
+j<-1
+while(j<=length(uctrl)){
+  
+  cfun<-function(x){
+    t<-ttestratio(subset(dfci,ctrl==uctrl[x])$ci,
+                  subset(dfci,ctrl=="baseline")$ci )
+    return(1-as.numeric(c(t$estimate[3],t$conf.int[1],t$conf.int[2])))
+  }
+  csp<-data.frame(ctrl=uctrl[j],t(cfun(j)))
+  dfag<-rbind(dfag,csp)
+  j<-j+1
+}
 
-coef2<-max(subset(dfi3,variable=="ci")$lower.ci.mpg,
-           na.rm = TRUE )/
-  max(subset(dfi3,variable=="i")$mean.mpg, na.rm = TRUE )
+names(dfag)[2:4]<-c("ci_mean","low","upper")
 
-coef3<-max(subset(dfi3,variable=="ci")$upper.ci.mpg ,
-           na.rm = TRUE )/
-  max(subset(dfi3,variable=="i")$mean.mpg,na.rm = TRUE )
+dfag$ctrl2<-gsub("[0-9]+|_|\\.","",dfag$ctrl)
+#dfag$ctrl2 <- factor(dfag$ctrl2, levels = c("schoolclose","workclose","otherclose","travelrestrict"))
+#dfag$ctrlinten<-as.numeric(as.character(gsub("[a-z]+|_","",dfag$ctrl)))
+#########
+dfag$ctrlinten<-as.numeric(substring(as.character(dfag$ctrl),27,28))
+write.csv(dfag,"./paperrev/paperrev2.csv",row.names = FALSE)
 
-dfi3[which(dfi3$variable=="ci"),c(3,7,8)]<-
-  sweep(dfi3[which(dfi3$variable=="ci"),c(3,7,8)],2,
-        c(coef1,coef1,coef1),"/")
-
-#############################################################################
-cls<-pal_npg("nrc")(9)
+dfag$ci_mean<-dfag$ci_mean-0.7
+dfag$low<-dfag$low-0.7
+dfag$upper<-dfag$upper-0.7
+mypal = pal_npg("nrc", alpha = 1)(9)
 library("scales")
-show_col(pal_npg("nrc")(9))
+show_col(mypal)
 
-icplot<-ggplot(data= subset(dfi3,days<=366))+
-  geom_line(aes(x=days-1,y = mean.mpg,
-                linetype=as.factor(variable)),color=cls[9])+
-  geom_ribbon(aes(x=days,ymin= lower.ci.mpg,ymax=upper.ci.mpg,
-                  group=as.factor(variable)),fill=cls[9],alpha=0.3)+
-  scale_color_npg()+
-  scale_fill_npg()+
-  scale_x_continuous(expand = c(0,0),
-                     breaks = c(0,200,400,600)/2,
-                     labels =c(0,200,400,600)/2)+
-  scale_y_continuous(expand = c(0,0),
-                     breaks = c(0,0.01,0.02,0.03),
-                     labels = c("0%","1%","2%","3%"),
-                     limits = c(0,0.031),sec.axis = sec_axis
-                     ( trans=~.*coef1,labels=scales::percent))+
+
+t<-ggplot(data= subset(dfag,ctrlinten %in% c(30,40,50,60,70,80)))  +
+  
+  geom_bar(aes(x=as.factor(ctrlinten),y = ci_mean ,
+               fill= as.factor(ctrl2),
+               alpha=as.factor(ctrlinten)),
+           stat = "identity",position = "dodge")+
+  #geom_hline(yintercept = 0.1,color="red",size=0.5)+
+  scale_alpha_manual(breaks =c(30,40,50,60,70,80),
+                     values=c(0.3,0.4,0.5,0.6,0.7,0.8))+
+  geom_errorbar( aes(x=as.factor(ctrlinten), ymin=low, 
+                     ymax=upper ,group= as.factor(ctrl)),
+                 position = position_dodge(width=0.5),
+                 width=0.5, alpha=1, size=0.5,color="black")+
+  scale_fill_manual(values = mypal[3])+
   theme_classic()+
-  #facet_rep_wrap(~ssl, repeat.tick.labels = TRUE)+
-  #coord_capped_cart(bottom='both', left='both')+
+  coord_flip(clip="off")+
+  
+  scale_x_discrete(breaks = unique(dfag$ctrlinten),
+                   labels = paste(unique(dfag$ctrlinten),"%",sep=""))+
+  scale_y_continuous(expand = c(0,0),
+                     breaks = c(0,0.1,0.2,0.3),
+                     labels = c("70%","80%","90%","100%"),
+                     limits = c(0,0.3)
+  )+
   theme(
     panel.background = element_rect(fill = "transparent"), # bg of the panel
     plot.background = element_rect(fill = "transparent"), # bg of the plot
     legend.position = 'none',
     legend.title = element_blank(),
     strip.background = element_blank(),
-    #strip.text = element_blank(),
     axis.ticks = element_line(colour = "black",size = 0.5),
-    #axis.ticks.length=unit(.25, "cm"),
+    axis.ticks.length=unit(.25, "cm"),
     axis.text.x = element_text(margin = margin(t =5, r = 0, b = 0, l = 0)),
     axis.text.y = element_text(margin = margin(t = 0, r =5, b = 0, l = 0)),
-    #plot.margin = margin(1, 1, 1, 1, "cm"),
-    #panel.spacing = unit(2, "lines"),
-    text =element_text(size =20),
+    panel.spacing = unit(2, "lines"),
+    text =element_text(size =30),
+    #plot.margin = margin(0.1, 0.1, 0.1, 0.1, "cm"),
     axis.title = element_blank(),
     aspect.ratio = 1)
+t
 
-icplot
 
-# ggsave("../figs/fig3c.jpeg", icplot,  width = 10, height = 10, units = "cm",dpi=1200,bg="transparent")
-# ggsave("../figs/fig3c.svg", icplot,  width = 10, height = 10, units = "cm",dpi=1200,bg="transparent")
+ggsave("./figs/fig3c.jpeg", t,  width = 23, height = 23, units = "cm",dpi=1200,bg="transparent")
 
+ggsave("./figs/fig3c.svg", t,  width = 23, height = 23, units = "cm",dpi=1200,bg="transparent")

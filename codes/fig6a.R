@@ -6,10 +6,10 @@ library(wesanderson)
 library(readr)
 library(egg)
 ###########################################################
-dfcompare<-readRDS("../data/dfcompareallwh_01_per2.RDS")
+dfcompare<-readRDS("./data/dfcompareallwh_01_per2.RDS")
 dfcompare$incomegroup[is.na(dfcompare$incomegroup)]<-"High income"
-tcount<-readRDS("../data/tcoundwh.RDS")
-s1<-data.frame(read_csv("../data/s1.csv"))
+tcount<-readRDS("./data/tcoundwh.RDS")
+s1<-data.frame(read_csv("./data/s1.csv"))
 ###########################################################
 dfc<-merge(dfcompare,tcount,
            by="maskcountry",all.x=TRUE)
@@ -27,7 +27,7 @@ testjp$n.y*0.001639691/testjp$ci.x
 ###########################################################
 dfc<-merge(dfc,s1[c("maskcountry","sp")],
            by="maskcountry",all.x=TRUE)
-isoregion<-data.frame(read.csv("../data/gstout2.csv"))
+isoregion<-data.frame(read.csv("./data/gstout2.csv"))
 
 dfc<-merge(dfc,isoregion,by.x = "maskcountry",
            by.y="CTR_MN_ISO",all.x = TRUE)
@@ -82,7 +82,7 @@ t
 
 tpfix <- set_panel_size(t,width  = unit(20, "cm"),
                         height = unit(20, "cm"))
-ggsave("../figs/fig6a.jpeg", tpfix,  width =25,
+ggsave("../figs/fig4a.jpeg", tpfix,  width =25,
        height = 25, units = "cm",dpi=1200,bg="transparent")
-ggsave("../figs/fig6a.svg", tpfix,  width =25, 
+ggsave("../figs/fig4a.svg", tpfix,  width =25, 
        height = 25, units = "cm",dpi=1200,bg="transparent")

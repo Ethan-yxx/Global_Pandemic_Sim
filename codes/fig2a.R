@@ -99,8 +99,8 @@ t
 
 tpfix <- set_panel_size(t,width  = unit(20, "cm"),
                         height = unit(20, "cm"))
-# ggsave("../figs/fig4a.jpeg", tpfix,  width =25,
+# ggsave("../figs/fig2a.jpeg", tpfix,  width =25,
 #        height = 25, units = "cm",dpi=1200,bg="transparent")
-# ggsave("../figs/fig4a.svg", tpfix,  width =25, 
+# ggsave("../figs/fig2a.svg", tpfix,  width =25, 
 #        height = 25, units = "cm",dpi=1200,bg="transparent")
 

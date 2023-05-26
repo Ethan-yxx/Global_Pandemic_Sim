@@ -9,7 +9,7 @@ library(scales)
 library(egg)
 library(tibble)
 ###############################################################
-cmr<-readRDS("../data/iatacm3157new.RDS")
+cmr<-readRDS("./data/iatacm3157new.RDS")
 cm1<-data.frame(t(sapply(1:length(cmr),function(x){return(c(
   sum(cmr[[x]]$school),
   sum(cmr[[x]]$work),
@@ -20,8 +20,8 @@ names(cm1)<-c("school","work","other","home")
 cm2<-sweep(cm1,1,apply(cm1,1,sum),"/")
 
 ###############################################################
-iatatb<-readRDS("../data/iatatb3157.RDS")
-isoregion<-data.frame(read.csv("../data/gstout2.csv"))
+iatatb<-readRDS("./data/iatatb3157.RDS")
+isoregion<-data.frame(read.csv("./data/gstout2.csv"))
 
 cm2$CTR_MN_ISO<-iatatb$ISOALPHA
 
@@ -92,9 +92,9 @@ t
 tpfix <- set_panel_size(t,width  = unit(20, "cm"),
                         height = unit(6, "cm"))
 
-ggsave("../figs/fig5b.jpeg", tpfix,  width =25,
+ggsave("../figs/fig3b.jpeg", tpfix,  width =25,
        height = 25, units = "cm",dpi=1200,bg="transparent")
-ggsave("./figs/fig5b.svg", tpfix,  width =25, 
+ggsave("./figs/fig3b.svg", tpfix,  width =25, 
        height = 25, units = "cm",dpi=1200,bg="transparent")
 
 
